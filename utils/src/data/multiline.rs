@@ -22,14 +22,37 @@ pub struct MultilineParser<T> {
     phantom: PhantomData<T>,
 }
 
-impl<T: FromKVs + Debug> MultilineParser<T> {
+impl<T> MultilineParser<T> {
     pub fn new(sep: Sep) -> Self {
         Self {
             sep,
             phantom: PhantomData,
         }
     }
+}
+impl<T: Debug> MultilineParser<T> {
+    pub fn group_rows(&self, input: &str) -> Vec<Vec<String>> {
+        let mut res:  Vec<Vec<String>> = vec![];
+        let mut current = vec![];
 
+        for line in input.lines() {
+            if line.is_empty() {
+                res.push(current.clone());
+                current.clear();
+            } else {
+                current.push(line.to_string());
+            }
+        }
+
+        if !current.is_empty() {
+            res.push(current);
+        }
+
+        res
+    }
+}
+
+impl<T: FromKVs + Debug> MultilineParser<T> {
     pub fn parse(&self, input: &str) -> Vec<T> {
         let mut res = vec![];
         let mut current = HashMap::new();
