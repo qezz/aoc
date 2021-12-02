@@ -1,9 +1,7 @@
-fn input_to_data(input: &String) -> Vec<usize> {
-    input.split('\n').filter_map(|line| line.trim().parse::<usize>().ok()).collect()
-}
+use utils::input_to_data;
 
-fn solution1(input: &String) -> String {
-    let v = input_to_data(input);
+fn solution1(input: &str) -> String {
+    let v = input_to_data::<usize>(input);
     let mut incs = 0;
 
     for pair in v.windows(2) {
@@ -15,7 +13,7 @@ fn solution1(input: &String) -> String {
     format!("{}", incs)
 }
 
-fn solution2(input: &String) -> String {
+fn solution2(input: &str) -> String {
     let v = input_to_data(input);
     let mut last: Option<usize> = None;
     let mut incs = 0;
@@ -48,7 +46,7 @@ mod tests {
     use super::*;
     use utils::simple_test;
 
-    const SAMPLE_INPUT: &'static str = "199
+    const SAMPLE_INPUT: &str = "199
 200
 208
 210

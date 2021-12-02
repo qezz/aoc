@@ -1,9 +1,5 @@
 use std::str::FromStr;
 
-pub fn input_to_data(input: &str) -> Vec<Command> {
-    input.split('\n').filter_map(|line| line.trim().parse::<Command>().ok()).collect()
-}
-
 #[derive(Clone, Debug)]
 pub enum Direction {
     Up,

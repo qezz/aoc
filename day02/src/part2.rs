@@ -1,3 +1,5 @@
+use utils::input_to_data;
+
 use crate::common::*;
 
 pub struct Vm {
@@ -39,7 +41,7 @@ impl Vm {
 }
 
 
-pub fn solution2(input: &String) -> usize {
+pub fn solution2(input: &str) -> usize {
     let cmds = input_to_data(input);
     let mut vm = Vm::new();
 
