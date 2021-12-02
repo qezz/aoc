@@ -6,7 +6,7 @@ macro_rules! simple_test {
             let actual = $the_fn(& $input.to_string());
             assert_eq!(
                 format!("{}", $expected ),
-                actual,
+                format!("{}", actual),
             );
         }
     };
