@@ -1,4 +1,4 @@
-use utils::input_to_data;
+use utils::data::lines::input_to_data;
 
 fn solution1(input: &str) -> String {
     let v = input_to_data::<usize>(input);

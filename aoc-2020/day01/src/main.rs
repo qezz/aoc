@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use utils::input_to_data;
+use utils::data::lines::input_to_data;
 
 fn two_sum(nums: Vec<i32>, target: i32) -> Vec<i32> {
     let mut hm: HashMap<i32, usize> = HashMap::new();

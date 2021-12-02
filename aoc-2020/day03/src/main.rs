@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use utils::data::{GridTrait, InfiniteRightGrid, input_to_grid};
+use utils::data::grid::{GridTrait, InfiniteRightGrid, input_to_grid};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Cell {

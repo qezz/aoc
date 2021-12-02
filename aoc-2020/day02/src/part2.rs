@@ -1,4 +1,4 @@
-use utils::input_to_data;
+use utils::data::lines::input_to_data;
 
 use std::str::FromStr;
 
@@ -80,7 +80,6 @@ fn is_valid(entry: &PasswordEntry) -> bool {
 
 pub fn solution2(input: &str) -> i32 {
     let data: Vec<PasswordEntry> = input_to_data(input);
-    println!("data: {:?}", &data[..10]);
     let mut valid = 0;
     for entry in data {
         if is_valid(&entry) {

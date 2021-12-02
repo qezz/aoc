@@ -1,4 +1,4 @@
-use utils::input_to_data;
+use utils::data::lines::input_to_data;
 
 use crate::common::*;
 
