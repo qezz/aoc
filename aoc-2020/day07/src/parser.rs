@@ -38,19 +38,20 @@ fn bag_type(input: &str) -> IResult<&str, BagType> {
     Ok((input, BagType::colored(&color)))
 }
 
-fn count_bag_type(input: &str) -> IResult<&str, BagType> {
-    let (input, _d) = digit1(input)?;
+fn count_bag_type(input: &str) -> IResult<&str, (usize, BagType)> {
+    let (input, d) = digit1(input)?;
     let (input, s) = space1(input)?;
     let (input, bt) = bag_type(input)?;
-    Ok((input, bt))
+    let count: usize = d.parse().unwrap();
+    Ok((input, (count, bt)))
 }
 
-fn no_other_bags(input: &str) -> IResult<&str, Vec<BagType>> {
+fn no_other_bags(input: &str) -> IResult<&str, Vec<(usize ,BagType)>> {
     let (input, _) = tag("no other bags")(input)?;
     Ok((input, vec![]))
 }
 
-fn bags_list(input: &str) -> IResult<&str, Vec<BagType>> {
+fn bags_list(input: &str) -> IResult<&str, Vec<(usize, BagType)>> {
     separated_list1(tag(", "), count_bag_type)(input)
 }
 
@@ -85,8 +86,8 @@ mod tests {
         assert_eq!(bag, Ok(("", BagD {
             typ: BagType::colored("light red"),
             contains: vec![
-                BagType::colored("bright white"),
-                BagType::colored("muted yellow"),
+                (1, BagType::colored("bright white")),
+                (2, BagType::colored("muted yellow")),
             ],
         })));
     }
@@ -97,8 +98,8 @@ mod tests {
         assert_eq!(bag.unwrap().1, BagD {
             typ: BagType::colored("light red"),
             contains: vec![
-                BagType::colored("bright white"),
-                BagType::colored("muted yellow"),
+                (1, BagType::colored("bright white")),
+                (2, BagType::colored("muted yellow")),
             ],
         });
     }

@@ -44,6 +44,7 @@ pub fn solution1(input: &str) -> usize {
 
     for bag in &v {
         for nested in &bag.contains {
+            let nested = nested.clone().1;
             let ent = hm.entry(nested.clone()).or_insert_with(HashSet::new);
             (*ent).insert(bag.clone().typ);
         }
