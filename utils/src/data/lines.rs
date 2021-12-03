@@ -1,6 +1,10 @@
-use std::str::FromStr;
+use std::{collections::VecDeque, str::FromStr};
 
 pub fn input_to_data<T: FromStr>(input: &str) -> Vec<T> {
+    input.split('\n').filter_map(|line| line.trim().parse::<T>().ok()).collect()
+}
+
+pub fn input_to_vecdeque<T: FromStr>(input: &str) -> VecDeque<T> {
     input.split('\n').filter_map(|line| line.trim().parse::<T>().ok()).collect()
 }
 
