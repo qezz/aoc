@@ -18,14 +18,14 @@ pub trait FromKVs {
 }
 
 pub struct MultilineParser<T> {
-    sep: Sep,
+    _sep: Sep,
     phantom: PhantomData<T>,
 }
 
 impl<T> MultilineParser<T> {
     pub fn new(sep: Sep) -> Self {
         Self {
-            sep,
+            _sep: sep,
             phantom: PhantomData,
         }
     }

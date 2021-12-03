@@ -11,7 +11,7 @@ pub trait GridTrait {
 
 pub struct InfiniteRightGrid<T> {
     width: usize,
-    height: usize,
+    _height: usize,
     inner: Vec<Vec<T>>
 }
 
@@ -21,7 +21,7 @@ impl<T: Debug + Clone> GridTrait for InfiniteRightGrid<T> {
     fn fixed(width: usize, height: usize) -> Self {
         Self {
             width,
-            height,
+            _height: height,
             inner: Vec::with_capacity(height),
         }
     }
