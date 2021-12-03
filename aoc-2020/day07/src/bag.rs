@@ -1,5 +1,5 @@
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Hash)]
 pub struct BagType {
     color: String,
 }
@@ -12,13 +12,13 @@ impl BagType {
     }
 }
 
-pub struct BagDefinition {
-    typ: BagType,
-    contains: Vec<BagType>,
-}
+// pub struct BagDefinition {
+//     typ: BagType,
+//     contains: Vec<BagType>,
+// }
 
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Hash)]
 pub struct BagD {
   pub typ: BagType,
   pub contains: Vec<BagType>,
