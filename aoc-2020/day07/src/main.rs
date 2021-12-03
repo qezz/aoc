@@ -3,6 +3,7 @@ mod bag;
 
 use std::collections::{HashMap, HashSet};
 
+use bag::BagD;
 use parser::bag_definition;
 
 use crate::bag::BagType;
@@ -80,8 +81,29 @@ pub fn solution1(input: &str) -> usize {
     res.len()
 }
 
+fn get_inner_bag_count(data: &HashMap<BagType, Vec<(usize, BagType)>>, color: &str) -> usize { //  Option<usize> {
+    let bag = BagType::colored(color);
+    let inner = data.get(&bag).unwrap();
+
+    let mut sum = 0; // = Some(0);
+
+    for b in inner {
+        let multiplier = b.0;
+        let count = 1 + get_inner_bag_count(data, &b.1.color);
+        sum += multiplier * count;
+    }
+
+    sum
+}
+
 pub fn solution2(input: &str) -> usize {
-    42
+    let mut hm = HashMap::new();
+    for line in input.lines() {
+        let bag = bag_definition(line).unwrap().1;
+        hm.insert(bag.typ, bag.contains);
+    }
+
+    get_inner_bag_count(&hm, "shiny gold")
 }
 
 fn main() {
@@ -110,8 +132,47 @@ vibrant plum bags contain 5 faded blue bags, 6 dotted black bags.
 faded blue bags contain no other bags.
 dotted black bags contain no other bags.";
 
+    const SAMPLE_INPUT2: &str = "shiny gold bags contain 2 dark red bags.
+dark red bags contain 2 dark orange bags.
+dark orange bags contain 2 dark yellow bags.
+dark yellow bags contain 2 dark green bags.
+dark green bags contain 2 dark blue bags.
+dark blue bags contain 2 dark violet bags.
+dark violet bags contain no other bags.";
+
     simple_test!(part1, solution1, SAMPLE_INPUT, 4);
-    // simple_test!(part2, solution2, SAMPLE_INPUT, todo!());
+    // simple_test!(part2, solution2, SAMPLE_INPUT2, 1);
+
+    const SAMPLE_INPUT3: &str = "shiny gold bags contain 2 dark red bags.
+dark red bags contain no other bags.";
+    simple_test!(part2_1, solution2, SAMPLE_INPUT3, 2);
+
+    const SAMPLE_INPUT2_2: &str = "shiny gold bags contain 1 dark red bags.
+dark red bags contain 1 dark orange bags.
+dark orange bags contain no other bags.";
+    simple_test!(part2_two_bags, solution2, SAMPLE_INPUT2_2, 2);
+
+    const SAMPLE_INPUT2_3: &str = "shiny gold bags contain 1 dark red bag.
+dark red bags contain no other bags.";
+    simple_test!(part2_one_bag, solution2, SAMPLE_INPUT2_3, 1);
+
+    const SAMPLE_INPUT2_4: &str = "shiny gold bags contain 2 dark red bags.
+dark red bags contain no other bags.";
+    simple_test!(part2_4, solution2, SAMPLE_INPUT2_4, 2);
+
+    const SAMPLE_INPUT2_5: &str = "shiny gold bags contain 7 dark red bags.
+dark red bags contain no other bags.";
+    simple_test!(part2_seven, solution2, SAMPLE_INPUT2_5, 7);
+    const SAMPLE_INPUT2_6: &str = "shiny gold bags contain 7 dark red bags.
+dark red bags contain 1 dark orange bags.
+dark orange bags contain no other bags.";
+    simple_test!(part2_seven2, solution2, SAMPLE_INPUT2_6, 14);
+
+    const SAMPLE_INPUT2_7: &str = "shiny gold bags contain 7 dark red bags.
+dark red bags contain 2 dark orange bags.
+dark orange bags contain no other bags.";
+    simple_test!(part2_14bag, solution2, SAMPLE_INPUT2_7, 21);
+
 }
 
 

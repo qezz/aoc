@@ -1,7 +1,7 @@
 
 #[derive(Clone, Debug, Eq, PartialEq, Hash)]
 pub struct BagType {
-    color: String,
+    pub color: String,
 }
 
 impl BagType {
