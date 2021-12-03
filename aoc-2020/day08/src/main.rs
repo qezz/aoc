@@ -6,7 +6,7 @@ mod vm;
 fn solution1(input: &str) -> i64 {
     let mut vm = Vm::default();
     vm.load(input);
-    vm.run(|vm| {
+    vm.run_interrupt(|vm| {
         !vm._seen.contains(&vm.ps)
     })
 }

@@ -15,46 +15,32 @@ pub struct Vm {
     pub ps: i64,
     pub prog: Vec<Command>,
     pub _seen: HashSet<i64>,
-
-    // pub _history: Vec<>
 }
 
 pub fn clone_swap_current_to_end(s: &Vm) -> (bool, i64) {
     let mut vm: Vm = (*s).clone();
-    println!("clone swap for {}: {:?}", vm.ps, vm.prog[vm.ps as usize]);
     let curr_cmd = vm.prog[vm.ps as usize].clone();
 
     match curr_cmd {
-        Command::Acc(n) => vm.accum += n,
         Command::Jmp(n) => {
             vm.prog[vm.ps as usize] = Command::Nop(n);
         },
         Command::Nop(n) => {
             vm.prog[vm.ps as usize] = Command::Jmp(n);
         },
+        _ => {}
     }
 
     loop {
         if vm._seen.contains(&vm.ps) {
             return (false, 0);
         }
-        vm._seen.insert(vm.ps);
 
         if vm.ps as usize == vm.prog.len() {
             break;
         }
 
-        let cmd = vm.prog[vm.ps as usize].clone();
-        match cmd {
-            Command::Acc(n) => vm.accum += n,
-            Command::Jmp(n) => {
-                vm.ps += (n - 1);
-                // continue;
-            },
-            Command::Nop(_) => {},
-        }
-
-        vm.ps += 1;
+        vm.exec();
     }
 
     (true, vm.accum)
@@ -77,60 +63,56 @@ impl Vm {
         }
     }
 
-    pub fn run<F>(&mut self, watcher: F) -> i64
+    pub fn exec(&mut self) {
+        self._seen.insert(self.ps);
+
+        let cmd = self.prog[self.ps as usize].clone();
+        match cmd {
+            Command::Acc(n) => self.accum += n,
+            Command::Jmp(n) => {
+                self.ps += n - 1; // incremented later anyway
+            },
+            Command::Nop(_) => {},
+        }
+
+            self.ps += 1;
+    }
+
+    pub fn run_interrupt<F>(&mut self, watcher: F) -> i64
     where F: Fn(&Vm) -> bool
     {
         loop {
-            if !watcher(&self) {
+            if !watcher(self) {
                 break;
             }
-
-            let cmd = self.prog[self.ps as usize].clone();
-            match cmd {
-                Command::Acc(n) => self.accum += n,
-                Command::Jmp(n) => {
-                    self.ps += (n - 1);
-                    // continue;
-                },
-                Command::Nop(_) => {},
-            }
-
-            self._seen.insert(self.ps);
-            self.ps += 1;
+            self.exec();
         }
 
         self.accum
     }
 
+    pub fn peek_cmd(&self) -> Option<Command> {
+        self.prog.get(self.ps as usize).cloned()
+    }
+
     pub fn run_fix(&mut self) -> i64
     {
         loop {
-            println!("ps: {}", self.ps);
             if self.prog.len() == self.ps as usize {
                 break;
             }
-            let cmd = self.prog[self.ps as usize].clone();
-            match cmd {
-                Command::Acc(n) => self.accum += n,
-                Command::Jmp(n) => {
-                    let (res, val) = clone_swap_current_to_end(self);
-                    if res {
-                        return val
-                    }
 
-                    self.ps += (n - 1);
-                    // continue;
-                },
-                Command::Nop(_) => {
+            match self.peek_cmd().unwrap() {
+                Command::Jmp(_) | Command::Nop(_) => {
                     let (res, val) = clone_swap_current_to_end(self);
                     if res {
                         return val
                     }
                 },
+                _ => {}
             }
 
-            self._seen.insert(self.ps);
-            self.ps += 1;
+            self.exec()
         }
 
         self.accum
@@ -154,7 +136,7 @@ acc +1
 jmp -1";
         let mut vm = Vm::default();
         vm.load(input);
-        let res = vm.run(|vm| {
+        let res = vm.run_interrupt(|vm| {
             !vm._seen.contains(&vm.ps)
         });
 

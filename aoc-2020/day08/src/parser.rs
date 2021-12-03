@@ -1,17 +1,11 @@
 use nom::{
     IResult,
     branch::alt,
-    bytes::complete::{
-        tag,
-        take_till
+    bytes::complete::tag,
+    character::complete::{
+        digit1,
+        space1
     },
-    character::{
-        complete::{
-            digit1,
-            space1
-        }
-    },
-    multi::separated_list1
 };
 
 use crate::vm::Command;
