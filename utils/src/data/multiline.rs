@@ -4,6 +4,26 @@ use std::{
     marker::PhantomData
 };
 
+pub fn group_rows(input: &str) -> Vec<Vec<String>> {
+    let mut res:  Vec<Vec<String>> = vec![];
+    let mut current = vec![];
+
+    for line in input.lines() {
+        if line.is_empty() {
+            res.push(current.clone());
+            current.clear();
+        } else {
+            current.push(line.to_string());
+        }
+    }
+
+    if !current.is_empty() {
+        res.push(current);
+    }
+
+    res
+}
+
 pub enum Sep {
     EmptyLine,
 }
@@ -30,25 +50,16 @@ impl<T> MultilineParser<T> {
         }
     }
 }
+
+impl<T> Default for MultilineParser<T> {
+    fn default() -> Self {
+        Self::new(Sep::EmptyLine)
+    }
+}
+
 impl<T: Debug> MultilineParser<T> {
     pub fn group_rows(&self, input: &str) -> Vec<Vec<String>> {
-        let mut res:  Vec<Vec<String>> = vec![];
-        let mut current = vec![];
-
-        for line in input.lines() {
-            if line.is_empty() {
-                res.push(current.clone());
-                current.clear();
-            } else {
-                current.push(line.to_string());
-            }
-        }
-
-        if !current.is_empty() {
-            res.push(current);
-        }
-
-        res
+        group_rows(input)
     }
 }
 

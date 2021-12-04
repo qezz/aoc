@@ -64,6 +64,8 @@ pub fn input_to_grid<T: FromStr, G: GridTrait<Item=T>>(input: &str) -> G {
     grid
 }
 
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
