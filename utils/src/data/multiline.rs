@@ -28,7 +28,7 @@ pub enum Sep {
     EmptyLine,
 }
 
-pub struct KeyValue<K, V>(K, V);
+pub struct KeyValue<K, V>(pub K, pub V);
 
 pub struct Invalid;
 
