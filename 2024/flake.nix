@@ -25,10 +25,11 @@
 
         devShells = {
           default = pkgs.mkShell {
-            buildInputs = with pkgs;
+            nativeBuildInputs = with pkgs;
               [
                 rocFull # includes CLI
                 haskell
+                haskell-language-server
               ];
 
             # For vscode plugin https://github.com/ivan-demchenko/roc-vscode-unofficial
