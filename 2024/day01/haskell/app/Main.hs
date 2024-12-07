@@ -2,6 +2,8 @@
 
 module Main where
 
+import System.Environment (getArgs)
+
 import Data.List
 
 import Data.Map (Map)
@@ -27,7 +29,12 @@ oneByOneDiff (x:xs) (y:ys) = (x - y) : oneByOneDiff xs ys
 
 main :: IO ()
 main = do
-  content <- readFile "../input.txt"
+  args <- getArgs
+  let path = case args of
+        (x:_) -> x
+        []    -> error "Expects path to input file"
+
+  content <- readFile path
   let lns = lines content
 
   let listOfListsOfStrings :: [[String]] = map words lns
