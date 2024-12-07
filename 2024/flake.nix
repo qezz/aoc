@@ -17,6 +17,8 @@
 
         rocFull = rocPkgs.full;
 
+        haskell = pkgs.haskellPackages.ghcWithPackages (pkgs: with pkgs; [ cabal-install ]);
+
       in
       {
         formatter = pkgs.nixpkgs-fmt;
@@ -26,6 +28,7 @@
             buildInputs = with pkgs;
               [
                 rocFull # includes CLI
+                haskell
               ];
 
             # For vscode plugin https://github.com/ivan-demchenko/roc-vscode-unofficial
