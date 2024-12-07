@@ -4,6 +4,10 @@ module Main where
 
 import Data.List
 
+import Data.Map (Map)
+import qualified Data.Map as Map
+
+
 concat' :: String -> String -> String
 concat' a b = a ++ b
 
@@ -37,4 +41,20 @@ main = do
   let s = zipWith (\a b -> abs (a - b) ) l1 l2
   let x = sum s
 
-  putStrLn $ show x
+  putStrLn $ "part1: " ++ show x
+
+  let freqmap :: Map Integer Integer = foldl (
+        \acc x -> Map.insertWith (+) x 1 acc
+                      ) Map.empty l2
+
+  -- putStrLn $ "l1: " ++ show l1
+  -- putStrLn $ "freq map: " ++ show freqmap
+
+  let res = foldl (\acc val ->
+                     let t = Map.findWithDefault 0 val freqmap
+                     in
+                       acc + (val * t)
+                  ) 0 l1
+
+  putStrLn $ "part2: " ++ show res
+
