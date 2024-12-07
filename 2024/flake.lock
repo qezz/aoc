@@ -93,6 +93,21 @@
         "type": "github"
       }
     },
+    "nixpkgs-mozilla": {
+      "locked": {
+        "lastModified": 1733136220,
+        "narHash": "sha256-Ga8AP/YPsKDVF5LcNN8v3RiLgnEeW7zBk9GyX7wa9Ug=",
+        "owner": "mozilla",
+        "repo": "nixpkgs-mozilla",
+        "rev": "ad7af231a95acf65ccc4afa0c766f5c0674ad3f1",
+        "type": "github"
+      },
+      "original": {
+        "owner": "mozilla",
+        "repo": "nixpkgs-mozilla",
+        "type": "github"
+      }
+    },
     "nixpkgs_2": {
       "locked": {
         "lastModified": 1712163089,
@@ -135,6 +150,7 @@
       "inputs": {
         "flake-utils": "flake-utils",
         "nixpkgs": "nixpkgs",
+        "nixpkgs-mozilla": "nixpkgs-mozilla",
         "roc": "roc"
       }
     },
