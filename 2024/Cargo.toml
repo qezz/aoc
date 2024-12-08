@@ -3,6 +3,7 @@
 members = [
     "day04/rust",
     "day05",
+    "day06/rust",
 ]
 
 resolver = "2"
