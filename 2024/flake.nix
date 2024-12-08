@@ -37,6 +37,7 @@
                 haskell
                 haskell-language-server
                 rusttoolchain
+                zig
               ];
 
             RUST_SRC_PATH = pkgs.rustPlatform.rustLibSrc;
