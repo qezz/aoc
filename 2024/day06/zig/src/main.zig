@@ -212,26 +212,38 @@ const Vm = struct {
         return null;
     }
 
-    pub fn peek_next_cell_pos(self: Vm) Pos {
+    pub fn peek_next_cell_pos(self: Vm) ?Pos {
         const d = self.guard_dir;
         const p = self.guard_pos;
 
         return switch (d) {
-            Guard.n => .{ .row = p.row - 1, .col = p.col },
+            Guard.n => {
+                if (p.row == 0) {
+                    return null;
+                } else {
+                    return .{ .row = p.row - 1, .col = p.col };
+                }
+            },
             Guard.e => .{ .row = p.row, .col = p.col + 1 },
             Guard.s => .{ .row = p.row + 1, .col = p.col },
-            Guard.w => .{ .row = p.row, .col = p.col - 1 },
+            Guard.w => {
+                if (p.col == 0) {
+                    return null;
+                } else {
+                    return .{ .row = p.row, .col = p.col - 1 };
+                }
+            },
         };
     }
 
-    pub fn peek_next_cell_value(self: Vm) CellT {
-        const next = self.peek_next_cell_pos();
-        const cell = self.get(next.row, next.col);
+    // pub fn peek_next_cell_value(self: Vm) CellT {
+    //     const next = self.peek_next_cell_pos();
+    //     const cell = self.get(next.row, next.col);
 
-        std.log.debug("cell: {s}", .{cell.t});
+    //     std.log.debug("cell: {s}", .{cell.t});
 
-        return cell.t;
-    }
+    //     return cell.t;
+    // }
 
     pub fn count_visited(self: Vm) usize {
         var total: usize = 0;
@@ -249,22 +261,24 @@ const Vm = struct {
     }
 
     pub fn tick(self: *Vm) bool {
-        const next = self.peek_next_cell_pos();
-        const maybe_cell: ?Cell = self.maybe_get_pos(next);
+        const maybe_next: ?Pos = self.peek_next_cell_pos();
+        if (maybe_next) |next| {
+            const maybe_cell: ?Cell = self.maybe_get_pos(next);
 
-        if (maybe_cell) |cell| {
-            if (cell.vacant()) {
-                std.log.debug("cell: {s} vacant", .{cell.t});
-                self.guard_pos = next;
+            if (maybe_cell) |cell| {
+                if (cell.vacant()) {
+                    // std.log.debug("cell: {s} vacant", .{cell.t});
+                    self.guard_pos = next;
 
-                var mut_cell = &self.map.inner.items[next.row].items[next.col];
-                mut_cell.t = .visited;
+                    var mut_cell = &self.map.inner.items[next.row].items[next.col];
+                    mut_cell.t = .visited;
 
-                return true;
-            } else {
-                self.guard_dir = self.guard_dir.turn_right();
+                    return true;
+                } else {
+                    self.guard_dir = self.guard_dir.turn_right();
 
-                return true;
+                    return true;
+                }
             }
         }
 
@@ -298,7 +312,7 @@ pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
 
-    const file_contents = try read_file(allocator, "../test.txt");
+    const file_contents = try read_file(allocator, "../input.txt");
     defer allocator.free(file_contents);
 
     const m = try Map.from_str(file_contents, allocator);
@@ -310,14 +324,16 @@ pub fn main() !void {
     const next_p = vm.peek_next_cell_pos();
     try std.io.getStdOut().writer().print("Next: {any}\n", .{next_p});
 
-    const next_v = vm.peek_next_cell_value();
-    try std.io.getStdOut().writer().print("Next: {any}\n", .{next_v});
+    // const next_v = vm.peek_next_cell_value();
+    // try std.io.getStdOut().writer().print("Next: {any}\n", .{next_v});
 
     var can_continue = true;
     while (can_continue) {
         can_continue = vm.tick();
-        try std.io.getStdOut().writer().print("Vm:\n{any}\n", .{vm});
+        // try std.io.getStdOut().writer().print("Vm:\n{any}\n", .{vm});
     }
+
+    try std.io.getStdOut().writer().print("Vm:\n{any}\n", .{vm});
 
     const visited = vm.count_visited();
     try std.io.getStdOut().writer().print("Visited:\n{d}\n", .{visited});
