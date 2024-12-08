@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use nom::{
     bytes::complete::{tag, take_until1, take_while},
     character::complete::{digit1, space1},
@@ -10,6 +12,12 @@ use nom::{
 pub struct PageOrderRule {
     pub before: u64,
     pub after: u64,
+}
+
+impl Display for PageOrderRule {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} | {}", self.before, self.after)
+    }
 }
 
 pub fn page_order_rule_line(input: &str) -> IResult<&str, PageOrderRule> {
@@ -26,7 +34,7 @@ pub fn page_order_rule_line(input: &str) -> IResult<&str, PageOrderRule> {
     ))
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct PagesPrinted {
     pub pages: Vec<u64>,
 }
