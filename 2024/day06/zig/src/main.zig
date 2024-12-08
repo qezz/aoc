@@ -126,6 +126,7 @@ const Visited = union(enum) {
 const CellT = union(enum) {
     empty,
     busy,
+    canBeBlocked,
     guard: Guard,
     visited: Visited,
 
@@ -161,6 +162,7 @@ const CellT = union(enum) {
             CellT.busy => try writer.print("#", .{}),
             CellT.guard => try writer.print("@", .{}),
             CellT.visited => try writer.print("{s}", .{self.visited}),
+            CellT.canBeBlocked => try writer.print("O", .{}),
         }
     }
 };
@@ -210,6 +212,23 @@ const Map = struct {
         return Map{ .inner = rows };
     }
 
+    pub fn clone(self: Map, allocator: std.mem.Allocator) Map {
+        var nrows = std.ArrayList(std.ArrayList(Cell)).init(allocator);
+
+        for (self.inner.items) |row| {
+            var cols = std.ArrayList(Cell).init(allocator);
+            for (row.items) |cell| {
+                cols.append(cell) catch unreachable;
+            }
+
+            nrows.append(cols) catch unreachable;
+        }
+
+        return Map{
+            .inner = nrows,
+        };
+    }
+
     pub fn format(
         self: Map,
         comptime fmt: []const u8,
@@ -228,17 +247,14 @@ const Map = struct {
     }
 };
 
-pub fn clone(map: Map) Map {
-    return map;
-}
-
 const Vm = struct {
     map: Map,
+    mapblocks: Map,
     guard_dir: Guard,
     guard_pos: Pos,
 
-    pub fn init(orig_map: Map) Vm {
-        var map = clone(orig_map);
+    pub fn init(orig_map: Map, allocator: std.mem.Allocator) Vm {
+        var map: Map = orig_map.clone(allocator);
         var guard_dir: Guard = .n;
         var guard_pos: ?Pos = null;
 
@@ -261,7 +277,7 @@ const Vm = struct {
             }
         }
 
-        return Vm{ .map = map, .guard_dir = guard_dir, .guard_pos = guard_pos.? };
+        return Vm{ .map = map, .guard_dir = guard_dir, .guard_pos = guard_pos.?, .mapblocks = map.clone(allocator) };
     }
 
     pub fn get(self: Vm, row: usize, col: usize) Cell {
@@ -317,6 +333,31 @@ const Vm = struct {
     //     return cell.t;
     // }
 
+    pub fn current_is_visited_to_the_right(self: Vm) bool {
+        const to_right = Guard.turn_right(self.guard_dir);
+        // std.log.debug("to right: {s}", .{to_right});
+
+        const maybe_cell = self.maybe_get_pos(self.guard_pos);
+
+        if (maybe_cell) |cell| {
+            // std.log.debug("cur cell: {?}", .{cell.t});
+            std.log.debug("pos: {?}, cur cell: {?}, to_right {?}", .{ cell.pos, cell.t, to_right });
+            switch (cell.t) {
+                CellT.visited => {
+                    switch (cell.t.visited) {
+                        Visited.n => return to_right == Guard.n,
+                        Visited.e => return to_right == Guard.e,
+                        Visited.s => return to_right == Guard.s,
+                        Visited.w => return to_right == Guard.w,
+                    }
+                },
+                else => {},
+            }
+        }
+
+        return false;
+    }
+
     pub fn count_visited(self: Vm) usize {
         var total: usize = 0;
 
@@ -332,30 +373,39 @@ const Vm = struct {
         return total;
     }
 
-    pub fn tick(self: *Vm) bool {
+    pub fn tick(self: *Vm) struct { bool, bool } {
         const maybe_next: ?Pos = self.peek_next_cell_pos();
         if (maybe_next) |next| {
             const maybe_cell: ?Cell = self.maybe_get_pos(next);
 
             if (maybe_cell) |cell| {
                 if (cell.vacant()) {
+                    if (self.current_is_visited_to_the_right()) {
+                        std.log.err("nnnnnnnnnnnnnnnnnnnnnnnnnn", .{});
+
+                        var mut_cell = &self.mapblocks.inner.items[next.row].items[next.col];
+                        mut_cell.t = CellT.canBeBlocked;
+                    }
+
                     // std.log.debug("cell: {s} vacant", .{cell.t});
                     self.guard_pos = next;
+
+                    // var can_be_blocked: bool = false;
 
                     var mut_cell = &self.map.inner.items[next.row].items[next.col];
                     // mut_cell.t = .visited;
                     mut_cell.t = CellT{ .visited = Visited.from_guard_dir(self.guard_dir) };
 
-                    return true;
+                    return .{ true, false };
                 } else {
                     self.guard_dir = self.guard_dir.turn_right();
 
-                    return true;
+                    return .{ true, false };
                 }
             }
         }
 
-        return false;
+        return .{ false, false };
     }
 
     pub fn format(
@@ -385,14 +435,15 @@ pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
 
-    const file_contents = try read_file(allocator, "../input.txt");
+    const file_contents = try read_file(allocator, "../test.txt");
     defer allocator.free(file_contents);
 
     const m = try Map.from_str(file_contents, allocator);
     try std.io.getStdOut().writer().print("Map:\n{any}\n", .{m});
 
-    var vm = Vm.init(m);
+    var vm = Vm.init(m, allocator);
     try std.io.getStdOut().writer().print("Vm:\n{any}\n", .{vm});
+    try std.io.getStdOut().writer().print("Can be blocked:\n{any}\n", .{vm.mapblocks});
 
     const next_p = vm.peek_next_cell_pos();
     try std.io.getStdOut().writer().print("Next: {any}\n", .{next_p});
@@ -402,11 +453,13 @@ pub fn main() !void {
 
     var can_continue = true;
     while (can_continue) {
-        can_continue = vm.tick();
+        can_continue, _ = vm.tick();
         // try std.io.getStdOut().writer().print("Vm:\n{any}\n", .{vm});
+        try std.io.getStdOut().writer().print("Vm:\n{any}\n", .{vm});
     }
 
     try std.io.getStdOut().writer().print("Vm:\n{any}\n", .{vm});
+    try std.io.getStdOut().writer().print("Can be blocked:\n{any}\n", .{vm.mapblocks});
 
     const visited = vm.count_visited();
     try std.io.getStdOut().writer().print("Visited:\n{d}\n", .{visited});
