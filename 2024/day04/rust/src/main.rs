@@ -140,18 +140,75 @@ fn xmas_at(v: &[Vec<char>], row: usize, col: usize) -> usize {
     more.len()
 }
 
+type Mas = ((isize, isize), (isize, isize), (isize, isize));
+
+const MAS_NW_SE: Mas = ((-1, -1), (0, 0), (1, 1));
+const MAS_SE_NW: Mas = ((1, 1), (0, 0), (-1, -1));
+const MAS_NE_SW: Mas = ((1, -1), (0, 0), (-1, 1));
+const MAS_SW_NE: Mas = ((-1, 1), (0, 0), (1, -1));
+
+fn diag_mas(v: &[Vec<char>], row: usize, col: usize, pattern: Mas) -> bool {
+    let cur = v[row][col];
+    if cur != 'A' {
+        return false;
+    }
+
+    if let Some(x) = v
+        .get(row.wrapping_add_signed(pattern.0 .0))
+        .and_then(|r| r.get(col.wrapping_add_signed(pattern.0 .1)))
+    {
+        if *x != 'M' {
+            return false;
+        }
+    } else {
+        return false;
+    }
+
+    if let Some(x) = v
+        .get(row.wrapping_add_signed(pattern.2 .0))
+        .and_then(|r| r.get(col.wrapping_add_signed(pattern.2 .1)))
+    {
+        if *x != 'S' {
+            return false;
+        }
+    } else {
+        return false;
+    }
+
+    true
+}
+
+fn cross_mas(v: &[Vec<char>], row: usize, col: usize) -> bool {
+    let items = [
+        diag_mas(v, row, col, MAS_NW_SE),
+        diag_mas(v, row, col, MAS_SE_NW),
+        diag_mas(v, row, col, MAS_NE_SW),
+        diag_mas(v, row, col, MAS_SW_NE),
+    ];
+    // println!("items: {:?}", items);
+
+    let more: Vec<bool> = items.into_iter().filter(|x| *x).collect();
+    // println!("more {} {}: {:?}", row, col, more);
+    more.len() == 2
+}
+
 fn main() {
     let path1 = std::env::args().nth(1).unwrap();
     let input = std::fs::read_to_string(path1).unwrap();
 
     let m = read_matrix(&input);
     let mut total = 0;
+    let mut total2 = 0;
 
     for i in 0..m.len() {
         for j in 0..m[i].len() {
-            total += xmas_at(&m, i,  j)
+            total += xmas_at(&m, i, j);
+            if cross_mas(&m, i, j) {
+                total2 += 1;
+            }
         }
     }
 
     println!("part1: {}", total);
+    println!("part2: {}", total2);
 }
