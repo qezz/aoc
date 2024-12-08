@@ -60,18 +60,82 @@ const Guard = union(enum) {
     }
 };
 
+const Visited = union(enum) {
+    n,
+    e,
+    s,
+    w,
+
+    pub fn from_char(c: u8) Guard {
+        return switch (c) {
+            '^' => .n,
+            'v' => .s,
+            '>' => .e,
+            '<' => .w,
+            else => unreachable,
+        };
+    }
+
+    pub fn from_guard_dir(guard: Guard) Visited {
+        // The following code crashes the compiler:
+        //
+        //   const x = switch (guard) {
+        //       ...
+        //   };
+        //
+        // :shrug:
+        var x: ?Visited = null;
+        x = switch (guard) {
+            Guard.n => Visited.n,
+            Guard.e => Visited.e,
+            Guard.s => Visited.s,
+            Guard.w => Visited.w,
+        };
+
+        // std.log.debug(" hello", .{});
+        return x.?;
+    }
+
+    // pub fn turn_right(self: Guard) Guard {
+    //     return switch (self) {
+    //         .n => Guard.e,
+    //         .e => Guard.s,
+    //         .s => Guard.w,
+    //         .w => Guard.n,
+    //     };
+    // }
+
+    pub fn format(
+        self: Visited,
+        comptime fmt: []const u8,
+        options: std.fmt.FormatOptions,
+        writer: anytype,
+    ) !void {
+        _ = fmt;
+        _ = options;
+
+        switch (self) {
+            .n => try writer.print("^", .{}),
+            .e => try writer.print(">", .{}),
+            .s => try writer.print("v", .{}),
+            .w => try writer.print("<", .{}),
+        }
+    }
+};
+
 const CellT = union(enum) {
     empty,
     busy,
     guard: Guard,
-    visited,
+    visited: Visited,
 
-    pub fn from_char(c: u8) CellT {
+    pub fn init_from_char(c: u8) CellT {
         return switch (c) {
             '#' => CellT.busy,
             '.' => CellT.empty,
-            'X' => CellT.visited,
-            else => CellT{ .guard = Guard.from_char(c) },
+            // 'X' => CellT.visited,
+            '^' => CellT{ .guard = Guard.from_char(c) },
+            else => unreachable,
         };
     }
 
@@ -95,8 +159,8 @@ const CellT = union(enum) {
         switch (self) {
             CellT.empty => try writer.print(".", .{}),
             CellT.busy => try writer.print("#", .{}),
-            CellT.guard => try writer.print("^", .{}),
-            CellT.visited => try writer.print("X", .{}),
+            CellT.guard => try writer.print("@", .{}),
+            CellT.visited => try writer.print("{s}", .{self.visited}),
         }
     }
 };
@@ -131,7 +195,7 @@ const Map = struct {
             var cols = std.ArrayList(Cell).init(allocator);
 
             for (line) |char| {
-                const c = CellT.from_char(char);
+                const c = CellT.init_from_char(char);
                 try cols.append(Cell.init(row, col, c));
 
                 col += 1;
@@ -164,21 +228,29 @@ const Map = struct {
     }
 };
 
+pub fn clone(map: Map) Map {
+    return map;
+}
+
 const Vm = struct {
     map: Map,
     guard_dir: Guard,
     guard_pos: Pos,
 
-    pub fn init(map: Map) Vm {
+    pub fn init(orig_map: Map) Vm {
+        var map = clone(orig_map);
         var guard_dir: Guard = .n;
         var guard_pos: ?Pos = null;
 
-        for (map.inner.items, 0..) |row, rowi| {
+        for (orig_map.inner.items, 0..) |row, rowi| {
             for (row.items, 0..) |cell, coli| {
                 switch (cell.t) {
                     CellT.guard => {
                         std.log.debug("guard: {d} {d} {s}", .{ rowi, coli, cell.t });
-                        map.inner.items[rowi].items[coli].t = .visited;
+                        const v: Visited = Visited.from_guard_dir(cell.t.guard);
+                        std.log.debug("visited: {s}", .{v});
+                        map.inner.items[rowi].items[coli].t = CellT{ .visited = v };
+                        std.log.debug("woot?: {s}", .{v});
                         std.log.debug("guard: {d} {d} {s}", .{ rowi, coli, map.inner.items[rowi].items[coli].t });
 
                         guard_dir = cell.t.guard;
@@ -271,7 +343,8 @@ const Vm = struct {
                     self.guard_pos = next;
 
                     var mut_cell = &self.map.inner.items[next.row].items[next.col];
-                    mut_cell.t = .visited;
+                    // mut_cell.t = .visited;
+                    mut_cell.t = CellT{ .visited = Visited.from_guard_dir(self.guard_dir) };
 
                     return true;
                 } else {
