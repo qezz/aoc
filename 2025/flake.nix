@@ -29,6 +29,7 @@
               [
                 rusttoolchain
                 zig
+                zls
               ];
 
             RUST_SRC_PATH = pkgs.rustPlatform.rustLibSrc;
