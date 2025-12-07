@@ -30,6 +30,7 @@
                 rusttoolchain
                 zig
                 zls
+                koka
               ];
 
             RUST_SRC_PATH = pkgs.rustPlatform.rustLibSrc;
