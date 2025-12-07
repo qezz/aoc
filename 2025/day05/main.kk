@@ -48,6 +48,35 @@ pub fun add-idrange-to-hashset(hs: hash-set<int>, idrange: idrange) : console ha
   from-list-helper(hs, r)
 }
 
+// source: rosetta code + mod for cmp
+fun qsort( xs : list<a>, cmp : ( a : a, b : a) -> bool) : div list<a> {
+  match(xs) {
+    Cons(x,xx) -> {
+      val (ys, zs) = xx.partition fn(el) { cmp(el, x) }
+      qsort(ys, cmp) ++ [x] ++ qsort(zs, cmp)
+    }
+    Nil -> Nil
+  }
+}
+
+pub fun merge-ranges-unsafe(a : idrange, b : idrange) : idrange {
+  Idrange(min(a.from, b.from), max(a.to, b.to))
+}
+
+pub fun x-overlaps-with-item(item : idrange, x: idrange) : bool {
+  if item.to >= (x.from - 1) then True else False
+}
+
+pub fun add-range-but-its-safe-only-if-ranges-are-sorted(ranges : list<idrange> , x : idrange) : list<idrange> {
+  match ranges
+    Nil -> Cons(x, Nil)
+    Cons(head, tail) ->
+      if x-overlaps-with-item(head, x) then
+        Cons(merge-ranges-unsafe(head, x), tail)
+      else
+        Cons(x, ranges)
+}
+
 pub fun parse-idranges(a : list<string>) : exn  list<idrange> {
   a.map(idrange-from-row)
 }
@@ -59,10 +88,6 @@ pub fun parse-ids(a : list<string>) : exn list<int> {
 pub fun id-in-ranges(ranges: list<idrange>, id: int) : bool {
   ranges.any(fn(range) in-idrange(range, id))
 }
-
-// pub fun add-to-hm(hm: hashmap<int>, x: int) : hashmap<int> {
-//   hm.insert(x)
-// }
 
 pub fun count-in-ranges(idranges : list<idrange>, ids: list<int>) : int {
   ids.filter(fn (id) id-in-ranges(idranges, id)).length
@@ -86,30 +111,13 @@ fun main()
   val part1 = count-in-ranges(reg, ids)
   println("part1: " ++ show(part1))
 
-  // val tr = Idrange(10, 15);
-  // val rang = range/list(tr.from, tr.to + 1)
-  // println("range: " ++ joinsep/join(rang.map(show), ","))
-  // val r = rang.foldl(hash-set(), fn (acc, x) acc.insert(x))
-  // r.map(fn (v) println(v))
-  // val xxx = std/data/hashset/effect/map(r, fn (v) println("hm val: " ++ show(v)))
-  // println(xxx)
-
-  // println("> " ++ Idrange(10, 15))
+  println("sorting")
+  val sorted = qsort(reg, fn (a, b) a.from < b.from)
+  println("sorted: " ++ joinsep/join(sorted.map(idrange-to-string), ", "))
 
   println("folding")
-  val part2 = reg.foldl(hash-set(), fn (acc, lst) add-idrange-to-hashset(acc, lst))
-  println("folded")
+  val folded-reversed = sorted.foldl(Nil, add-range-but-its-safe-only-if-ranges-are-sorted)
+  println("folded: " ++ joinsep/join(folded-reversed.map(idrange-to-string), ", "))
 
-  // val l = std/data/hashset/effect/map(r, fn (v) show(v))
-
-  // val sum = std/data/hashset/effect/map
-  val count = 0
-  // val vec-of-lists = part2.data.map(fn (buckets) buckets.list/map(fn (x) x) )
-  val vec-of-lists = part2.data
-  // val list-of-lists: list<list<_a>> = std/core/vector/map(vec-of-lists, fn (x) x.vector/list())
-  val list-of-lists = vec-of-lists.list()
-  val res = list-of-lists.flatmap(fn (x) x)
-  val amount = res.length()
-  println(amount)
-  // println("part2: " ++ part2)
-  println("done")
+  val sum = folded-reversed.foldl(0, fn (acc, x) acc + x.idrange-length)
+  println("part2: " ++ show(sum))
