@@ -1,0 +1,3 @@
+[submodule "2025/day05/libs/koka-std"]
+	path = 2025/day05/libs/koka-std
+	url = https://github.com/koka-community/std
