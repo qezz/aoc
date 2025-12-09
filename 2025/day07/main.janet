@@ -2,9 +2,13 @@
 (defn ch [s] (in s 0))
 
 (defn read-file-as-lines [fpath]
-  (filter (fn (x) (> (length x) 0)) (string/split "\n" (file/read (file/open fpath) :all))))
+  (def f (file/read (file/open fpath) :all))
 
-(defn part1 [fpath]
+  (->> f
+       (string/split "\n")
+       (filter (fn (x) (> (length x) 0)))))
+
+(defn part1 [name fpath]
   (def lines-raw (read-file-as-lines fpath))
   (def lines (map (fn (line) (buffer/slice line)) lines-raw))
 
@@ -30,94 +34,23 @@
         (error "invalid current line char")))
 
       (match [above this]
-        ["beam" "dot"] (do (print "S . :: " above " " this " -> beam falls")
-          (put line col (ch "|")))
-        ["beam" "split"] (do (print "S . :: " above " " this " -> beam splits")
+        ["beam" "dot"]
+          (put line col (ch "|"))
+        ["beam" "split"] (do
           (put line (- col 1) (ch "|"))
           (put line (+ col 1) (ch "|"))
 
           (set split-counter (+ split-counter 1)))
         _ nil)))
 
-
-  # (printf "lines: %q" lines)
-  (map (fn (x) (printf "%q" x)) lines)
-  (print "split: " split-counter))
+  (printf "%s: part1: split: %d" name split-counter))
 
 (defn char-str-to-pair [char-str]
   (case char-str
-    (ch "S") (do (print "s") [:beam 1])
+    (ch "S") [:beam 1]
     (ch ".") [:beam 0] # assumption: space is technically a beam 0 times.
     (ch "^") [:split]
     (error "fail")))
-
-(defn part2[fpath]
-  (def lines-raw (read-file-as-lines fpath))
-  (def lines-chars (map (fn (line) (buffer/slice line)) lines-raw))
-  (map (fn (x) (printf "%q" x)) lines-chars)
-  (def lines (map (fn (line) (map char-str-to-pair line)) lines-chars))
-  # (map (fn (x) (printf "%q" x)) lines)
-
-  (var split-counter 0)
-
-  (for l 1 (length lines)
-    (def prev-line (in lines (- l 1)))
-    (def line (in lines l))
-
-    (for col 0 (length line)
-      (def above (in prev-line col))
-      (def above-right (get prev-line (+ col 1)))
-
-      (def this (in line col))
-      (def right (get line (+ col 1)))
-
-      (match [right above-right]
-        [[:beam 0] [:beam n]]
-        (if (> n 0)
-          # put it to right, then continue
-          (put line (+ col 1) above-right)
-        )
-        )
-
-      (match [above this]
-        [[:beam n] [:beam m]]
-          (do
-            (if (and (> n 0) (= m 0))
-              (do
-                (put line col [:beam (+ m n)])
-                )
-
-              nil))
-        [[:beam n] [:split]]
-          (do
-            (if (> n 0)
-              (do
-                # the right could have been modifier above, so we need to re-read it
-                (def left (in line (- col 1)))
-                (def right (in line (+ col 1)))
-
-                (match [left right]
-                  [[:beam l] [:beam r]] (do
-                    (put line (- col 1) [:beam (+ l n)])
-                    (put line (+ col 1) [:beam (+ r n)]))
-                  (error "unreach")
-                  )
-
-                )
-              nil)))))
-
-  # (print "\n\nafter:")
-  # (map (fn (x) (printf "%q" x)) lines)
-
-  (printf "%q" (reduce (fn (acc beam) (+ acc (in beam 1))) 0 (last lines))))
-
-(do
-  (part1 "test.txt")
-  (part1 "input.txt")
-
-  (part2 "test.txt")
-  (part2 "input.txt")
-  )
 
 # NOTE: thoughts for part2:
 # for part2 we can keep track of how many "timelines" overlap in a certain point.
@@ -132,3 +65,59 @@
 # 1 3 3 1 (timelines: 8)
 #     ^   (splits: 7)
 # 1 33 31 (timelines: 11)
+(defn part2 [name fpath]
+  (def lines (->> fpath
+                  (read-file-as-lines)
+                  (map buffer/slice)
+                  (map (fn (line) (map char-str-to-pair line)))))
+
+  (for l 1 (length lines)
+    (def prev-line (in lines (- l 1)))
+    (def line (in lines l))
+
+    (for col 0 (length line)
+      (def above (in prev-line col))
+      (def above-right (get prev-line (+ col 1)))
+
+      (def this (in line col))
+      (def right (get line (+ col 1)))
+
+      # assumption: it's enough to perform this once to the right
+      # cell because we are iterating left to right, so the data
+      # should be complete by the time we process the next cell.
+      (match [right above-right]
+        [[:beam 0] [:beam n]]
+        (if (> n 0)
+          # put it to right, then continue
+          (put line (+ col 1) above-right)))
+
+      (match [above this]
+        [[:beam n] [:beam m]]
+          (if (and (> n 0) (= m 0))
+            (put line col [:beam (+ m n)]))
+        [[:beam n] [:split]]
+          (if (> n 0)
+            (do
+              # the right could have been modifier above, so we need to re-read it
+              (def left (in line (- col 1)))
+              (def right (in line (+ col 1)))
+
+              (match [left right]
+                [[:beam l] [:beam r]]
+                  (do
+                    (put line (- col 1) [:beam (+ l n)])
+                    (put line (+ col 1) [:beam (+ r n)]))
+                (error "unreachable")))))))
+
+  (printf "%s: part2: timelines: %q"
+          name
+          (->> lines
+               (last)
+               (reduce (fn (acc beam) (+ acc (in beam 1))) 0))))
+
+(do
+  (part1 "test" "test.txt")
+  (part2 "main" "test.txt")
+
+  (part1 "test" "input.txt")
+  (part2 "main" "input.txt"))
