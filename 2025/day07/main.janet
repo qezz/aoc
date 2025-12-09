@@ -58,6 +58,6 @@
 #   ^ ^   (splits: 3)
 #  1 2 1  (timelines: 4)
 #  ^ ^ ^  (splits: 6)
-# 1 2 2 1 (timelines: 6)
+# 1 3 3 1 (timelines: 8)
 #     ^   (splits: 7)
-# 1 22 21 (timelines: 8)
+# 1 33 31 (timelines: 11)
