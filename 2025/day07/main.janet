@@ -47,3 +47,17 @@
 (do
   (part1 "test.txt")
   (part1 "input.txt"))
+
+# NOTE: thoughts for part2:
+# for part2 we can keep track of how many "timelines" overlap in a certain point.
+# that way we can simply get the sum of the row and add it to the total counter
+#
+#    1    (timelines: 1)
+#    ^    (splits: 1)
+#   1.1   (timelines: 2)
+#   ^ ^   (splits: 3)
+#  1 2 1  (timelines: 4)
+#  ^ ^ ^  (splits: 6)
+# 1 2 2 1 (timelines: 6)
+#     ^   (splits: 7)
+# 1 22 21 (timelines: 8)
