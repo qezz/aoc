@@ -31,6 +31,7 @@
                 zig
                 zls
                 koka
+                janet
               ];
 
             RUST_SRC_PATH = pkgs.rustPlatform.rustLibSrc;
